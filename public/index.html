@@ -9,9 +9,19 @@
   <body>
     <main class="shell">
       <header class="topbar">
-        <div>
-          <h1>Storage and Sharing Services</h1>
-          <p class="muted">receive -&gt; shared/received &nbsp;|&nbsp; serve &lt;- shared/available</p>
+        <div class="brand">
+          <img
+            class="brand-mark"
+            src="/logo_transparent_dark_g.png"
+            alt=""
+            width="1254"
+            height="1254"
+            aria-hidden="true"
+          />
+          <div>
+            <h1>Storage and Sharing Services</h1>
+            <p class="muted">receive -&gt; shared/received &nbsp;|&nbsp; serve &lt;- shared/available</p>
+          </div>
         </div>
         <div class="endpoint">
           <span id="originLabel"></span>
@@ -40,12 +50,12 @@
           <table class="download-table">
             <thead>
               <tr>
+                <th class="row-action">Download</th>
                 <th>File</th>
                 <th>Size</th>
                 <th>Type</th>
                 <th>Modified</th>
                 <th>SHA-256</th>
-                <th></th>
               </tr>
             </thead>
             <tbody id="downloadRows">
@@ -92,13 +102,13 @@
         <table>
           <thead>
             <tr>
+              <th class="row-action">Upload</th>
               <th>File</th>
               <th>Size</th>
               <th>Type</th>
               <th>Dimensions</th>
               <th>Modified</th>
               <th>Client SHA-256</th>
-              <th>Upload</th>
               <th>Server SHA-256</th>
               <th>Saved as</th>
               <th></th>

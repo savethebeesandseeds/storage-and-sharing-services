@@ -48,6 +48,20 @@ body {
   padding: 14px 16px;
 }
 
+.brand {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 14px;
+}
+
+.brand-mark {
+  width: 72px;
+  height: 72px;
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+
 h1 {
   margin: 0;
   font-size: 20px;
@@ -214,6 +228,21 @@ th {
   font-weight: 650;
 }
 
+th.row-action,
+td.row-action {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  min-width: 112px;
+  background: var(--panel);
+  box-shadow: 1px 0 0 var(--line);
+}
+
+th.row-action {
+  z-index: 2;
+  background: #eef1f5;
+}
+
 td {
   font-size: 12px;
 }
@@ -326,6 +355,15 @@ tr.empty td {
   .section-actions {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .brand {
+    align-items: flex-start;
+  }
+
+  .brand-mark {
+    width: 56px;
+    height: 56px;
   }
 
   .endpoint,

@@ -107,12 +107,12 @@ function renderDownloadRows(files) {
   for (const file of files) {
     const row = document.createElement("tr");
     row.append(
+      downloadActionCell(file),
       downloadFileCell(file),
       textCell(formatBytes(file.size), "mono"),
       textCell(file.mimeType || "application/octet-stream", "mono"),
       textCell(formatDate(Date.parse(file.modifiedAt)), "mono"),
-      hashCell(file.sha256, "server"),
-      downloadActionCell(file)
+      hashCell(file.sha256, "server")
     );
     downloadRows.append(row);
   }
@@ -144,6 +144,7 @@ function downloadFileCell(file) {
 function downloadActionCell(file) {
   const cell = document.createElement("td");
   const link = document.createElement("a");
+  cell.className = "row-action";
   link.className = "button download-link";
   link.href = file.url;
   link.download = file.name;
@@ -213,13 +214,13 @@ function renderRow(record) {
   row.dataset.id = record.id;
 
   row.append(
+    statusCell(record),
     fileCell(record),
     textCell(formatBytes(record.file.size), "mono"),
     textCell(record.file.type || "unknown", "mono"),
     textCell(record.dimensions, "mono"),
     textCell(formatDate(record.file.lastModified), "mono"),
     hashCell(record.clientHash, record.clientHashStatus),
-    statusCell(record),
     hashCell(record.serverHash, record.hashMatch === true ? "match" : record.serverHash ? "server" : "missing"),
     savedCell(record),
     actionCell(record)
@@ -269,7 +270,7 @@ function statusCell(record) {
   const progress = document.createElement("progress");
   const detail = document.createElement("div");
 
-  cell.className = "status";
+  cell.className = "status row-action";
   label.className = statusClass(record);
   label.textContent = statusLabel(record);
   progress.className = "mini-progress";
