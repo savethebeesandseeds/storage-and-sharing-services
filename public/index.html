@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Storage and Sharing Services</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <h1>Storage and Sharing Services</h1>
+          <p class="muted">receive -&gt; shared/received &nbsp;|&nbsp; serve &lt;- shared/available</p>
+        </div>
+        <div class="endpoint">
+          <span id="originLabel"></span>
+          <span id="runtimeStatus">Idle</span>
+        </div>
+      </header>
+
+      <section class="section-block" aria-labelledby="downloadsTitle">
+        <header class="section-header">
+          <div>
+            <p class="direction">OUTBOUND / DOWNLOAD</p>
+            <h2 id="downloadsTitle">Files available from this computer</h2>
+            <p class="muted">Place files in shared/available, then refresh this list.</p>
+          </div>
+          <div class="section-actions">
+            <button id="refreshDownloads" type="button">Refresh files</button>
+            <div class="stats">
+              <span id="downloadCount">0 files</span>
+              <span id="downloadBytes">0 B</span>
+              <span id="downloadChecked">not checked</span>
+            </div>
+          </div>
+        </header>
+
+        <div class="queue compact-queue">
+          <table class="download-table">
+            <thead>
+              <tr>
+                <th>File</th>
+                <th>Size</th>
+                <th>Type</th>
+                <th>Modified</th>
+                <th>SHA-256</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="downloadRows">
+              <tr class="empty">
+                <td colspan="6">Checking shared/available...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section-block" aria-labelledby="uploadsTitle">
+        <header class="section-header">
+          <div>
+            <p class="direction">INBOUND / UPLOAD</p>
+            <h2 id="uploadsTitle">Send media to this computer</h2>
+            <p class="muted">Accepted files are saved in shared/received.</p>
+          </div>
+        </header>
+
+      <section class="toolbar" aria-label="Upload controls">
+        <label class="button picker">
+          <input id="fileInput" type="file" name="images" accept="image/*,video/*,.mkv,.m4v,.3gp,.3g2" multiple />
+          Select images or videos
+        </label>
+        <button id="uploadButton" type="button" disabled>Upload queue</button>
+        <button id="clearButton" type="button" disabled>Clear</button>
+        <div class="stats">
+          <span id="fileCount">0 files</span>
+          <span id="byteCount">0 B</span>
+          <span id="completeCount">0 complete</span>
+        </div>
+      </section>
+
+      <section class="overall" aria-label="Overall progress">
+        <div class="overall-row">
+          <span>Overall progress</span>
+          <span id="overallPercent">0%</span>
+        </div>
+        <progress id="overallProgress" max="100" value="0"></progress>
+      </section>
+
+      <section class="queue" aria-label="Selected files">
+        <table>
+          <thead>
+            <tr>
+              <th>File</th>
+              <th>Size</th>
+              <th>Type</th>
+              <th>Dimensions</th>
+              <th>Modified</th>
+              <th>Client SHA-256</th>
+              <th>Upload</th>
+              <th>Server SHA-256</th>
+              <th>Saved as</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="fileRows">
+            <tr class="empty">
+              <td colspan="10">No files selected.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      </section>
+
+      <noscript>
+        <form class="fallback" method="post" action="/upload" enctype="multipart/form-data">
+          <input type="file" name="images" accept="image/*,video/*,.mkv,.m4v,.3gp,.3g2" multiple required />
+          <button type="submit">Upload</button>
+        </form>
+      </noscript>
+    </main>
+
+    <script src="/app.js" defer></script>
+  </body>
+</html>
