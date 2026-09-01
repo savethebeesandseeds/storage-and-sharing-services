@@ -1,6 +1,0 @@
-.git
-.gitignore
-.env
-node_modules
-shared
-npm-debug.log*
