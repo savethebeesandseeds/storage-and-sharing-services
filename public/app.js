@@ -341,6 +341,10 @@ async function loadMediaDetails(record) {
 }
 
 function mediaDimensions(file) {
+  if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
+    return Promise.resolve("not applicable");
+  }
+
   return new Promise((resolve) => {
     const url = URL.createObjectURL(file);
 

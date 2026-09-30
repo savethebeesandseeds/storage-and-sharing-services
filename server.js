@@ -3,6 +3,7 @@ const multer = require("multer");
 const path = require("path");
 const crypto = require("crypto");
 const fs = require("fs");
+const { pipeline } = require("stream/promises");
 
 const HOST = process.env.HOST || "0.0.0.0";
 const PORT = Number(process.env.PORT || 8084);
@@ -35,28 +36,6 @@ const MIME_EXTENSIONS = new Map([
   ["video/3gpp2", ".3g2"],
 ]);
 
-const FILE_EXTENSIONS = new Set([
-  ".jpg",
-  ".jpeg",
-  ".png",
-  ".webp",
-  ".gif",
-  ".heic",
-  ".heif",
-  ".avif",
-  ".mp4",
-  ".webm",
-  ".mov",
-  ".m4v",
-  ".mpeg",
-  ".mpg",
-  ".ogv",
-  ".avi",
-  ".mkv",
-  ".3gp",
-  ".3g2",
-]);
-
 const DOWNLOAD_MIME_TYPES = new Map([
   ...Array.from(MIME_EXTENSIONS, ([mimeType, extension]) => [extension, mimeType]),
   [".txt", "text/plain"],
@@ -72,10 +51,50 @@ const DOWNLOAD_MIME_TYPES = new Map([
 
 const downloadHashCache = new Map();
 
-function extensionFor(file) {
-  const originalExt = path.extname(file.originalname || "").toLowerCase();
-  if (FILE_EXTENSIONS.has(originalExt)) return originalExt;
-  return MIME_EXTENSIONS.get(file.mimetype) || "";
+function safeUploadName(originalName) {
+  // The receiving folder is on Windows, even though Node runs in Linux.
+  let name = path.win32.basename(path.posix.basename(originalName || ""))
+    .replace(/[<>:"/\\|?*\u0000-\u001f]/g, "_")
+    .replace(/[. ]+$/g, "");
+  if (!name) name = "file";
+  if (/^(con|prn|aux|nul|com[1-9\u00b9\u00b2\u00b3]|lpt[1-9\u00b9\u00b2\u00b3])(?:\.|$)/i.test(name)) {
+    name = `_${name}`;
+  }
+  return name;
+}
+
+async function saveUpload(file) {
+  const originalName = safeUploadName(file.originalname);
+  const extension = path.extname(originalName);
+  const stem = originalName.slice(0, originalName.length - extension.length);
+  let filename;
+  let filePath;
+  let handle;
+
+  for (let suffix = 0; ; suffix++) {
+    filename = suffix === 0 ? originalName : `${stem} (${suffix})${extension}`;
+    filePath = path.join(UPLOAD_DIR, filename);
+    try {
+      // Exclusive creation also protects files during concurrent uploads.
+      handle = await fs.promises.open(filePath, "wx");
+      break;
+    } catch (error) {
+      if (error.code !== "EEXIST") throw error;
+    }
+  }
+
+  file.path = filePath;
+  try {
+    const output = handle.createWriteStream();
+    await pipeline(file.stream, output);
+    return { destination: UPLOAD_DIR, filename, path: filePath, size: output.bytesWritten };
+  } catch (error) {
+    await handle.close();
+    await fs.promises.unlink(filePath).catch((cleanupError) => {
+      if (cleanupError.code !== "ENOENT") error.cleanupError = cleanupError;
+    });
+    throw error;
+  }
 }
 
 function escapeHtml(value) {
@@ -155,30 +174,22 @@ async function listDownloadFiles() {
     .sort((left, right) => right.modifiedMs - left.modifiedMs || left.name.localeCompare(right.name));
 }
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, UPLOAD_DIR),
-  filename: (req, file, cb) => {
-    const ext = extensionFor(file);
-    const base = `${Date.now()}-${crypto.randomBytes(6).toString("hex")}`;
-    cb(null, base + ext);
+const storage = {
+  _handleFile(req, file, cb) {
+    saveUpload(file).then((info) => cb(null, info), cb);
   },
-});
-
-const fileFilter = (req, file, cb) => {
-  if (MIME_EXTENSIONS.has(file.mimetype)) return cb(null, true);
-  const originalExt = path.extname(file.originalname || "").toLowerCase();
-  if (
-    FILE_EXTENSIONS.has(originalExt) &&
-    (!file.mimetype || file.mimetype === "application/octet-stream")
-  ) {
-    return cb(null, true);
-  }
-  cb(new Error("Only supported image or video files are allowed."));
+  _removeFile(req, file, cb) {
+    const filePath = file.path;
+    delete file.destination;
+    delete file.filename;
+    delete file.path;
+    fs.unlink(filePath, (error) => cb(error && error.code !== "ENOENT" ? error : null));
+  },
 };
 
 const upload = multer({
   storage,
-  fileFilter,
+  defParamCharset: "utf8",
   limits: { fileSize: MAX_FILE_SIZE_MB * 1024 * 1024, files: 50 },
 });
 
@@ -197,7 +208,15 @@ app.get("/healthz", (req, res) => {
 
 app.use(express.static(path.join(__dirname, "public")));
 
-app.use("/uploads", express.static(UPLOAD_DIR, { index: false }));
+app.use("/uploads", express.static(UPLOAD_DIR, {
+  index: false,
+  dotfiles: "allow",
+  setHeaders: (res, filePath) => {
+    // Arbitrary uploaded files must download instead of running on this origin.
+    res.attachment(path.basename(filePath));
+    res.setHeader("X-Content-Type-Options", "nosniff");
+  },
+}));
 
 app.get("/api/downloads", async (req, res, next) => {
   try {
@@ -227,6 +246,7 @@ app.get("/download/:name", (req, res, next) => {
   });
 });
 
+// Retain the existing multipart field name for clients using the upload API.
 app.post("/upload", upload.array("images", 50), async (req, res, next) => {
   try {
     const clientHashes = Array.isArray(req.body.sha256)

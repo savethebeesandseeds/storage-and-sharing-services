@@ -71,15 +71,15 @@
         <header class="section-header">
           <div>
             <p class="direction">INBOUND / UPLOAD</p>
-            <h2 id="uploadsTitle">Send media to this computer</h2>
-            <p class="muted">Accepted files are saved in shared/received.</p>
+            <h2 id="uploadsTitle">Send files to this computer</h2>
+            <p class="muted">All file types are accepted and saved in shared/received.</p>
           </div>
         </header>
 
       <section class="toolbar" aria-label="Upload controls">
         <label class="button picker">
-          <input id="fileInput" type="file" name="images" accept="image/*,video/*,.mkv,.m4v,.3gp,.3g2" multiple />
-          Select images or videos
+          <input id="fileInput" type="file" name="images" multiple />
+          Select files
         </label>
         <button id="uploadButton" type="button" disabled>Upload queue</button>
         <button id="clearButton" type="button" disabled>Clear</button>
@@ -126,7 +126,7 @@
 
       <noscript>
         <form class="fallback" method="post" action="/upload" enctype="multipart/form-data">
-          <input type="file" name="images" accept="image/*,video/*,.mkv,.m4v,.3gp,.3g2" multiple required />
+          <input type="file" name="images" multiple required />
           <button type="submit">Upload</button>
         </form>
       </noscript>

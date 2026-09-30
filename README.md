@@ -3,7 +3,7 @@
 A deliberately small local-network file exchange. It provides one technical web
 interface for two directions of transfer:
 
-- **Receive:** a phone or browser uploads images and videos into
+- **Receive:** a phone or browser uploads files of any type into
   `shared/received`.
 - **Share:** files placed in `shared/available` appear with their size, MIME
   type, modified time, SHA-256, and a direct download link.
@@ -65,17 +65,23 @@ shared/available
 Press **Refresh files** in the browser. Subdirectories and hidden files are not
 served. Downloads use `Content-Disposition: attachment`.
 
-### Receive images and videos
+### Receive files
 
-Use **Select images or videos** in the browser. Accepted files are written to:
+Use **Select files** in the browser. Uploaded files are written to:
 
 ```text
 shared/received
 ```
 
-Supported media includes JPEG, PNG, WebP, GIF, HEIC, HEIF, AVIF, MP4, MOV,
-WebM, MKV, M4V, MPEG, OGV, AVI, 3GP, and 3G2. The default per-file limit is
-1024 MB.
+All file types are accepted, including documents, archives, images, videos,
+and files without an extension or a recognized MIME type. Original filenames,
+including capitalization and Unicode characters, are preserved. If a name already
+exists, a numbered suffix is added before its extension, for example
+`report (1).pdf`; existing files are never overwritten. Path components are
+discarded, and characters or reserved names unsupported by Windows are sanitized.
+The default per-file limit is 1024 MB, with up to 50 files per request.
+Links to received files download them as attachments. Dimensions are shown only
+for images and videos.
 
 ## Configuration
 
@@ -100,7 +106,7 @@ read/write, and configures no automatic restart policy.
 | `GET /healthz` | Service health response |
 | `GET /api/downloads` | Technical metadata for offered files |
 | `GET /download/:name` | Attachment download from `shared/available` |
-| `POST /upload` | Multipart media upload into `shared/received` |
+| `POST /upload` | Multipart file upload into `shared/received` (field name: `images`) |
 
 ## Direct development
 
